@@ -1,16 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
+#include <time.h>
 
 // Global vars
 float balance = 1000;
 float amt;
 int ch;
+char* transaction_types[3] = {"Deposit", "Check Balance", "Withdrawal"};
+
+// Transaction history database
+struct history {
+    int isEmpty;
+    char *Transact_type; // Deposit, CheckBalance, Withdraw
+    float amount; // Amount withdrew/deposited, 0/NULL if CheckBalance
+    float initBalance;
+    float currentBalance;
+    char *dateCreated; // mm/dd/yyyy hh:mm:ss 24 hr format
+} logs[99];
+
+// Record history after transaction
+void recordHistory(int type, float amt, float initbal, float bal){ // Record History after transaction
+    int i;
+    
+    time_t now = time(NULL);
+    while (i >= 0) { // Check for previous entries to avoid overwriting
+        if (logs[i].isEmpty == 1) {
+            i++;
+        } else {
+            break;
+            printf("Iteration %d: Empty");
+        }
+        printf("Iteration %d: Filled");
+    }
+    logs[i].isEmpty = 1;
+    logs[i].Transact_type = transaction_types[i-1];
+    logs[i].amount = amt;
+    logs[i].initBalance = initbal;
+    logs[i].currentBalance = bal;
+    logs[i].dateCreated = localtime(&now);
+
+}
+
+// Password Protection
+// File Handle
 
 // Main Screen
 int HomeScreen(){
     system("cls");
-    printf("Hello!\n\nCurrent Balance %.2f\n\n(1) Deposit\n(2) Withdraw\n(3) Exit\n\nEnter your choice:",balance);
+    printf("Hello!\n\nCurrent Balance %.2f\n\n(1) Deposit\n(2) Withdraw\n(3) View History(4) Exit\n\nEnter your choice:",balance);
     scanf("%d", &ch);
     return ch;
 }
@@ -31,13 +69,14 @@ int afterAction(){
 }
 
 int withDraw(){
-    
+    float initBal = balance;
     system("cls");
     printf("Enter amount to withdraw: ");
     scanf("%f", &amt);
-    
     balance = balance - amt;
     printf("Withdraw successful.\n\nCash on Hand: %.2f\nCurrent Balance: %.2f\n\n",amt,balance);
+
+    recordHistory(3, amt, initBal, balance);
 
     ch = afterAction();
     return ch;
@@ -45,7 +84,6 @@ int withDraw(){
 
 int depoSit(){
     float initBal;
-    
     system("cls");
     printf("Enter amount to deposit: ");
     scanf("%f", &amt);
@@ -53,6 +91,8 @@ int depoSit(){
     initBal = balance;
     balance = balance + amt;
     printf("Deposit successful.\n\nInitial Balance: %.2f\nCurrent Balance: %.2f\n\n",initBal,balance);
+
+    recordHistory(1, amt, initBal, balance);
     
     ch = afterAction();
     return ch;
@@ -73,12 +113,15 @@ int main(){
                     i--;
                }
                break;
-            case 3:
+            case 4:
                 system("cls");
                 printf("THANK YOU FOR USING MIBANK, PLEASE COME AGAIN!");
                 getch();
                 i--;
                 break;
+            case 3:
+                system("cls");
+                
             default:
                 system("cls");
                 printf("Invalid code.");
