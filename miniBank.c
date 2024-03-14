@@ -7,11 +7,10 @@
 float balance = 1000;
 float amt;
 int ch;
-char* transaction_types[3] = {"Deposit", "Check Balance", "Withdrawal"};
+char* t_types[3] = {"Deposit", "Check Balance", "Withdrawal"};
 
 // Transaction history database
 struct history {
-    int isEmpty;
     char *Transact_type; // Deposit, CheckBalance, Withdraw
     float amount; // Amount withdrew/deposited, 0/NULL if CheckBalance
     float initBalance;
@@ -20,26 +19,26 @@ struct history {
 } logs[99];
 
 // Record history after transaction
-void recordHistory(int type, float amt, float initbal, float bal){ // Record History after transaction
-    int i;
+void readHistory(int type, float amt, float initbal, float bal){ // Record History after transaction
     
-    time_t now = time(NULL);
-    while (i >= 0) { // Check for previous entries to avoid overwriting
-        if (logs[i].isEmpty == 1) {
+    int i = 0;
+    int maxElement = 99;
+    time_t t = time(NULL);
+    struct tm* timeFull = localtime(&t);
+
+    while (i <= maxElement) {
+        if (logs[i].Transact_type != NULL) {
             i++;
         } else {
             break;
-            printf("Iteration %d: Empty");
         }
-        printf("Iteration %d: Filled");
     }
-    logs[i].isEmpty = 1;
-    logs[i].Transact_type = transaction_types[i-1];
+
+    logs[i].Transact_type = t_types[type-1];
     logs[i].amount = amt;
     logs[i].initBalance = initbal;
     logs[i].currentBalance = bal;
-    logs[i].dateCreated = localtime(&now);
-
+    logs[i].dateCreated = asctime(timeFull);
 }
 
 // Password Protection
@@ -48,7 +47,7 @@ void recordHistory(int type, float amt, float initbal, float bal){ // Record His
 // Main Screen
 int HomeScreen(){
     system("cls");
-    printf("Hello!\n\nCurrent Balance %.2f\n\n(1) Deposit\n(2) Withdraw\n(3) View History(4) Exit\n\nEnter your choice:",balance);
+    printf("Hello!\n\nCurrent Balance %.2f\n\n(1) Deposit\n(2) Withdraw\n(3) View History\n(4) Exit\n\nEnter your choice:",balance);
     scanf("%d", &ch);
     return ch;
 }
@@ -76,7 +75,7 @@ int withDraw(){
     balance = balance - amt;
     printf("Withdraw successful.\n\nCash on Hand: %.2f\nCurrent Balance: %.2f\n\n",amt,balance);
 
-    recordHistory(3, amt, initBal, balance);
+    readHistory(3, amt, initBal, balance);
 
     ch = afterAction();
     return ch;
@@ -92,10 +91,21 @@ int depoSit(){
     balance = balance + amt;
     printf("Deposit successful.\n\nInitial Balance: %.2f\nCurrent Balance: %.2f\n\n",initBal,balance);
 
-    recordHistory(1, amt, initBal, balance);
+    readHistory(1, amt, initBal, balance);
     
     ch = afterAction();
     return ch;
+}
+
+void viewHistory(){
+    int i;
+    for (i = 0; i <= 99; i++) {
+        if (logs[i].Transact_type != NULL) {
+        printf("\nType: %s\nAmount: %.2f\nInitial Balance: %.2f\nCurrent Balance: %.2f\nDate: %s\n",logs[i].Transact_type, logs[i].amount, logs[i].initBalance, logs[i].currentBalance, logs[i].dateCreated);
+        } else {
+            break;
+        }
+    }
 }
 
 int main(){
@@ -121,7 +131,11 @@ int main(){
                 break;
             case 3:
                 system("cls");
-                
+                viewHistory();
+                if (afterAction() == 1){
+                    i--;
+                }
+                break;
             default:
                 system("cls");
                 printf("Invalid code.");
