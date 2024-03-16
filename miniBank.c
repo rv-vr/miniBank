@@ -41,7 +41,7 @@ int PostTransaction(int TransactionType, float amount, float InitialBalance, flo
     
 
     memcpy(&TransactionDataIn.TransactionDate, TimeString, sizeof(TransactionDataIn.TransactionDate));
-    memcpy(&TransactionDataIn.TransactionType, TransactTypes[TransactionType], sizeof(TransactTypes[TransactionType]));
+    memcpy(&TransactionDataIn.TransactionType, TransactTypes[TransactionType], sizeof(&TransactionDataIn.TransactionType));
     TransactionDataIn.Amount = amount;
     TransactionDataIn.InitialBalance = InitialBalance;
     TransactionDataIn.FinalBalance = CurrentBalance;
@@ -49,6 +49,8 @@ int PostTransaction(int TransactionType, float amount, float InitialBalance, flo
     // Writes data to data file
     fwrite(&TransactionDataIn, sizeof(struct TransactionData), 1, infile);
     fclose(infile);
+
+    printf("\n\nTransaction recorded.\n");
 
     // Clear Terminal and show Post-transaction Screen
     printf("(1) Exit or (2) Go to Home Screen? ");
@@ -70,8 +72,17 @@ int Deposit(){ // Deposit transaction
     printf("Enter amount to deposit: ");
     scanf("%f",&amount);
 
+    if (amount <= 0){
+        printf("Please enter a valid amount.");
+        return EXIT;
+    } 
+
     initialBalance = balance;
     balance = balance + amount;
+
+    printf("\n\n---------------------------------------------------\n");
+    printf("Receipt\n\nAmount: %.2f\nInitial Balance: %.2f\nCurrent Balance: %.2f",amount,initialBalance,balance);    
+    printf("\n---------------------------------------------------");
 
     if (PostTransaction(1, amount, initialBalance, balance) == SUCCESS) {
         return SUCCESS;
@@ -88,13 +99,22 @@ int Withdraw(){ // Withdraw transaction
     printf("Available Balance: %.2f\nEnter amount to withdraw: ", initialBalance);
     scanf("%f",&amount);
     
+    if (amount <= 0){
+        printf("Please enter a valid amount.");
+        return EXIT;
+    } 
+    
     if (amount > balance) {
         printf("Invalid amount. Exiting...");
         sleep(3);
         return EXIT;
     } else {
-    balance = balance + amount;
+    balance = balance - amount;
     }
+
+    printf("\n\n---------------------------------------------------\n");
+    printf("Receipt\n\nAmount: %.2f\nInitial Balance: %.2f\nCurrent Balance: %.2f",amount,initialBalance,balance);    
+    printf("\n---------------------------------------------------");
 
     if (PostTransaction(0, amount, initialBalance, balance) == SUCCESS) {
         return SUCCESS;
@@ -149,6 +169,16 @@ int HomeScreen(){
 }
 
 int main(){
+    
+    // Initial Setup, read current balance, if no history, default to 1000
+    FILE* infile = fopen("TransactionData.bin","ab+");
+    struct TransactionData data;
+    // seek to last record
+    while (fread(&data, sizeof(struct TransactionData), 1, infile) == 1) {
+    }
+    balance = data.FinalBalance;
+    fclose(infile);
+
     int i;
     do {
         switch (HomeScreen()) {
